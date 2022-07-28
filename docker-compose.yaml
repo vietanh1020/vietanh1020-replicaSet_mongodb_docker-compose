@@ -1,0 +1,75 @@
+version: "3"
+
+services:
+  mongo1:
+    container_name: mongo1
+    image: mongo:4.4
+    restart: always
+    volumes:
+      - ./db1:/data/db
+    ports:
+      - "27017:27017"
+    expose:
+      - "27017"
+    entrypoint:
+      [
+        "/usr/bin/mongod",
+        "--port", "27017",
+        "--replSet", "dbrs",
+        "--bind_ip_all",
+      ]
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:4.4
+    restart: always
+    volumes:
+      - ./db2:/data/db
+    ports:
+      - "27018:27018"
+    expose:
+      - "27018"
+    entrypoint:
+      [
+        "/usr/bin/mongod",
+        "--port", "27018",
+        "--replSet", "dbrs",
+        "--bind_ip_all",
+      ]
+
+  mongo3:
+    container_name: mongo3
+    image: mongo:4.4
+    restart: always
+    volumes:
+      - ./db3:/data/db
+    ports:
+      - "27019:27019"
+    expose:
+      - "27019"
+    entrypoint:
+      [
+        "/usr/bin/mongod",
+        "--port", "27019",
+        "--replSet", "dbrs",
+        "--bind_ip_all",
+      ]
+
+  mongosetup:
+    container_name: mongosetup
+    image: "mongo-setup"
+    build: "./setup"
+    depends_on:
+      - mongo1
+
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    environment:
+      ME_CONFIG_MONGo_URL: mongo://mongo1:27017,mongo2:27018,mongo3:27019/?replicaSet=dbrs
+    ports:
+      - 8081:8081
+    restart: always
+    depends_on:
+      - mongo1
+      - mongosetup
